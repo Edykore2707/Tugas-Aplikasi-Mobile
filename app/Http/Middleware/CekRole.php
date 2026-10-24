@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,15 +20,23 @@ class CekRole
             return redirect('/login');
         }
 
+        $user = User::find(Auth::id());
+
+        if ($user && empty($user->role)) {
+            $user->update(['role' => 'admin']);
+        }
+
         // 2. Cek apakah role pengguna ada di dalam parameter $roles
-        if (in_array(Auth::user()->role, $roles)) {
+        if ($user && in_array($user->role, $roles, true)) {
             return $next($request);
         }
 
-        // 3. Jika role tidak cocok, kembalikan pesan Akses Ditolak (HTTP 403)
-        return response()->json([
-            'message' => 'Akses ditolak! Anda tidak memiliki izin ke halaman ini.'
-        ], 403);
+        // 3. Jika role tidak cocok, arahkan ke halaman yang sesuai dengan role pengguna
+        $fallbackRoute = ($user && $user->role === 'kasir') ? '/kasir' : '/dashboard';
+
+        return redirect($fallbackRoute)->withErrors([
+            'role' => 'Akses ditolak! Anda tidak memiliki izin ke halaman ini.'
+        ]);
     }
 
     /**

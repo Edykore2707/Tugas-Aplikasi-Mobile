@@ -55,6 +55,11 @@
             transition: 0.3s;
         }
 
+        .btn-login,
+        .btn-login * {
+            pointer-events: auto;
+        }
+
         .logo:hover {
             transform: scale(1.05);
         }
@@ -133,6 +138,7 @@
             font-size: 16px;
             margin-top: 20px;
             transition: 0.3s;
+            cursor: pointer;
         }
 
         .btn-login:hover {
@@ -160,6 +166,38 @@
             color: #59677a;
             font-size: 12px;
         }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fecaca;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .is-invalid {
+            border-color: rgba(239, 68, 68, 0.8) !important;
+            box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.15) !important;
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #8c98aa;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 2;
+        }
     </style>
 </head>
 
@@ -182,9 +220,15 @@
         </div>
 
         <!-- FORM LOGIN -->
-        <form action="{{ url('/login') }}" method="POST">
+        <form id="loginForm" action="{{ url('/login') }}" method="POST" novalidate>
 
             @csrf
+
+            @if ($errors->any())
+                <div class="alert-error">
+                    {{ $errors->first() }}
+                </div>
+            @endif
 
             <!-- EMAIL -->
             <div class="mb-3">
@@ -196,10 +240,15 @@
                 <input
                     type="email"
                     name="email"
-                    class="form-control"
+                    class="form-control @error('email') is-invalid @enderror"
                     placeholder="Masukkan email"
+                    value="{{ old('email') }}"
                     required
+                    autocomplete="email"
                 >
+                @error('email')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
             </div>
 
             <!-- PASSWORD -->
@@ -209,13 +258,23 @@
                     Password
                 </label>
 
-                <input
-                    type="password"
-                    name="password"
-                    class="form-control"
-                    placeholder="Masukkan password"
-                    required
-                >
+                <div class="password-wrap">
+                    <input
+                        id="passwordInput"
+                        type="password"
+                        name="password"
+                        class="form-control @error('password') is-invalid @enderror"
+                        placeholder="Masukkan password"
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Lihat password">
+                        <i class="bi bi-eye-slash"></i>
+                    </button>
+                </div>
+                @error('password')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
             </div>
 
             <!-- REMEMBER & FORGOT -->
@@ -241,7 +300,7 @@
             </div>
 
             <!-- TOMBOL LOGIN -->
-            <button type="submit" class="btn-login">
+            <button id="loginButton" type="submit" class="btn-login">
                 <i class="bi bi-box-arrow-in-right"></i>
                 Login
             </button>
@@ -263,6 +322,40 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('loginForm');
+            const button = document.getElementById('loginButton');
+            const passwordInput = document.getElementById('passwordInput');
+            const togglePassword = document.getElementById('togglePassword');
+
+            if (form && button) {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    form.submit();
+                });
+            }
+
+            if (passwordInput && togglePassword) {
+                togglePassword.addEventListener('click', function () {
+                    const type = passwordInput.type === 'password' ? 'text' : 'password';
+                    passwordInput.type = type;
+
+                    const icon = this.querySelector('i');
+                    if (type === 'password') {
+                        icon.classList.remove('bi-eye');
+                        icon.classList.add('bi-eye-slash');
+                        this.setAttribute('aria-label', 'Lihat password');
+                    } else {
+                        icon.classList.remove('bi-eye-slash');
+                        icon.classList.add('bi-eye');
+                        this.setAttribute('aria-label', 'Sembunyikan password');
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>

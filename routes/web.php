@@ -10,14 +10,19 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\StrukController; // <-- Ditambahkan
 
 /*
 |--------------------------------------------------------------------------
-| Halaman Publik
+| Halaman Publik / Akses Awal
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return view('frontend');
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return redirect()->route('login');
 });
 
 /*
@@ -38,8 +43,16 @@ Route::middleware(['guest'])->group(function () {
         ]);
 
         if (Auth::attempt($credentials)) {
+            $user = User::find(Auth::id());
+
+            if ($user && empty($user->role)) {
+                $user->role = str_contains(strtolower((string) $user->email), 'admin') ? 'admin' : 'kasir';
+                $user->save();
+            }
+
             $request->session()->regenerate();
-            return redirect()->intended('/kasir');
+
+            return redirect()->intended('/dashboard');
         }
 
         return back()->withErrors([
@@ -67,7 +80,7 @@ Route::middleware(['guest'])->group(function () {
         ]);
 
         Auth::login($user);
-        return redirect('/kasir');
+        return redirect('/dashboard');
     });
 });
 
@@ -90,7 +103,7 @@ Route::middleware(['auth'])->group(function () {
     // Link Eksekusi Verifikasi Email
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
-        return redirect('/kasir');
+        return redirect('/dashboard');
     })->middleware(['signed'])->name('verification.verify');
 
     // Kirim Ulang Email Verifikasi
@@ -119,17 +132,24 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// Akses Khusus Admin
-Route::middleware(['role:admin'])->group(function () {
+// Akses yang harus login
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/admin', function () {
-        return redirect()->route('products.index');
-    });
-    Route::resource('products', ProductController::class);
-});
+        return view('admin.index');
+    })->name('admin.index');
 
-// Akses Gabungan (Admin & Kasir)
-Route::middleware(['role:admin,kasir'])->group(function () {
-    Route::get('/kasir', [KasirController::class, 'index'])->name('kasir.index');
-    Route::post('/kasir/transaksi', [KasirController::class, 'store'])->name('kasir.store');
+    // Akses gabungan (Admin & Kasir)
+    Route::middleware(['role:admin,kasir'])->group(function () {
+        Route::get('/kasir', [KasirController::class, 'index'])->name('kasir.index');
+        Route::post('/kasir/transaksi', [KasirController::class, 'store'])->name('kasir.store');
+
+        // Rute Cetak Struk
+        Route::get('/struk', [StrukController::class, 'struk'])->name('struk.cetak');
+    });
+
+    // Produk hanya admin
+    Route::middleware(['role:admin'])->group(function () {
+        Route::resource('products', ProductController::class);
+    });
 });

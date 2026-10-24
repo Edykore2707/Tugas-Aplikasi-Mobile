@@ -25,11 +25,10 @@ return [
             'provider' => 'users',
         ],
 
-        // --- Guard API Sesuai Modul ---
+        // Guard API Menggunakan Sanctum
         'api' => [
-            'driver' => 'token',
+            'driver' => 'sanctum',
             'provider' => 'users',
-            'hash' => false,
         ],
     ],
 
