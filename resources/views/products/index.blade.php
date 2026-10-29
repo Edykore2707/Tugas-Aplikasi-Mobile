@@ -21,7 +21,7 @@
 
     <div class="card card-dark overflow-hidden">
         <div class="card-header bg-transparent border-bottom border-secondary px-4 py-3">
-            <h6 class="fw-bold text-white mb-0"><i class="bi bi-list-ul me-2 text-primary"></i>Produk Terdaftar</h6>
+            <h6 class="class=fw-bold text-white mb-0"><i class="bi bi-list-ul me-2 text-primary"></i>Produk Terdaftar</h6>
         </div>
         <div class="table-responsive">
             <table class="table table-dark table-hover align-middle mb-0">
@@ -42,8 +42,12 @@
                         <tr>
                             <td class="text-center text-secondary fw-semibold">{{ $loop->iteration }}</td>
                             <td class="text-center">
-                                @if($product->image && filter_var($product->image, FILTER_VALIDATE_URL))
-                                    <img src="{{ $product->image }}" alt="{{ $product->name }}" class="rounded-3 border border-secondary" style="width: 52px; height: 52px; object-fit: cover;">
+                                @if($product->image)
+                                    @if(filter_var($product->image, FILTER_VALIDATE_URL))
+                                        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="rounded-3 border border-secondary" style="width: 52px; height: 52px; object-fit: cover;">
+                                    @else
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="rounded-3 border border-secondary" style="width: 52px; height: 52px; object-fit: cover;">
+                                    @endif
                                 @else
                                     <div class="rounded-3 d-inline-flex align-items-center justify-content-center border border-secondary" style="width: 52px; height: 52px; background: rgba(148,163,184,0.08);">
                                         <i class="bi bi-image text-secondary"></i>

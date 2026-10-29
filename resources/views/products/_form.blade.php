@@ -64,14 +64,27 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label">
+    <label for="image" class="form-label">
         Image
     </label>
-    <input type="text"
+    <input type="file"
         name="image"
-        class="form-control"
-        value="{{ old('image', $product->image ?? '') }}"
-        placeholder="nama-file.jpg">
+        id="image"
+        class="form-control @error('image') is-invalid @enderror"
+        accept="image/*">
+    @error('image')
+        <div class="invalid-feedback">
+            {{ $message }}
+        </div>
+    @enderror
+
+    {{-- Menampilkan gambar lama jika sedang dalam mode edit --}}
+    @if(isset($product) && $product->image)
+        <div class="mt-2">
+            <small class="text-muted d-block mb-1">Gambar Saat Ini:</small>
+            <img src="{{ asset('storage/' . $product->image) }}" alt="Gambar Produk" class="img-thumbnail" style="max-height: 120px;">
+        </div>
+    @endif
 </div>
 
 <div class="form-check mb-3">

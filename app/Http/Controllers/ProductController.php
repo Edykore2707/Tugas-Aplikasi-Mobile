@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductController extends Controller
 {
@@ -36,9 +39,33 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
-            'image'       => 'nullable|string|max:255',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // Diubah menjadi validasi file gambar
             'is_active'   => 'nullable|boolean',
         ]);
+
+        // Proses unggah & resize gambar
+        $file = $request->file('image');
+        if ($file) {
+            $original = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $ext      = strtolower($file->getClientOriginalExtension());
+            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\_-]/', '_', $original) . '.' . $ext;
+            $path     = 'products/' . $filename;
+
+            // Manipulasi gambar dengan Intervention Image v3
+            $manager = new ImageManager(new Driver());
+            $image   = $manager->read($file->getRealPath())->cover(800, 800);
+
+            if ($ext === 'png') {
+                $encoded = $image->toPng();
+            } else {
+                $encoded = $image->toJpeg(85);
+            }
+
+            // Simpan ke storage public
+            Storage::disk('public')->put($path, $encoded->toString());
+
+            $validated['image'] = $path;
+        }
 
         $validated['is_active'] = $request->has('is_active');
 
@@ -76,9 +103,36 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
-            'image'       => 'nullable|string|max:255',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'is_active'   => 'nullable|boolean',
         ]);
+
+        // Jika ada file gambar baru yang diunggah
+        $file = $request->file('image');
+        if ($file) {
+            // Hapus gambar lama dari storage jika ada
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $original = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $ext      = strtolower($file->getClientOriginalExtension());
+            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\_-]/', '_', $original) . '.' . $ext;
+            $path     = 'products/' . $filename;
+
+            $manager = new ImageManager(new Driver());
+            $image   = $manager->read($file->getRealPath())->cover(800, 800);
+
+            if ($ext === 'png') {
+                $encoded = $image->toPng();
+            } else {
+                $encoded = $image->toJpeg(85);
+            }
+
+            Storage::disk('public')->put($path, $encoded->toString());
+
+            $validated['image'] = $path;
+        }
 
         $validated['is_active'] = $request->has('is_active');
 
@@ -94,6 +148,11 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        // Hapus file gambar dari storage jika ada
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
 
         return redirect()
