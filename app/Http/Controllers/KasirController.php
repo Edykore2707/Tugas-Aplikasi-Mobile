@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use App\Models\Product;
@@ -48,7 +50,12 @@ class KasirController extends Controller
                 'status'             => 'completed',
             ]);
 
-            // 3. Simpan Detail Transaksi & Kurangi Stok Produk
+            // 3. Simpan Order & Order Item agar invoice dapat ditampilkan
+            $order = Order::create([
+                'user_id' => auth()->id() ?? $transaction->user_id,
+                'total_amount' => $request->grand_total ?? 0,
+            ]);
+
             foreach ($request->cart as $item) {
                 // Ambil kode produk dari item, jika kosong cari dari database
                 $productCode = !empty($item['code']) ? $item['code'] : null;
@@ -56,6 +63,8 @@ class KasirController extends Controller
                     $product = Product::find($item['id']);
                     $productCode = $product->code ?? $product->product_code ?? '-';
                 }
+
+                $itemSubtotal = ($item['price'] ?? 0) * ($item['qty'] ?? 1);
 
                 TransactionDetail::create([
                     'transaction_id' => $transaction->id,
@@ -65,7 +74,16 @@ class KasirController extends Controller
                     'price'          => $item['price'] ?? 0,
                     'qty'            => $item['qty'] ?? 1,
                     'discount'       => $item['discount'] ?? 0,
-                    'subtotal'       => ($item['price'] ?? 0) * ($item['qty'] ?? 1),
+                    'subtotal'       => $itemSubtotal,
+                ]);
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['id'] ?? null,
+                    'product_name' => $item['name'] ?? 'Produk',
+                    'quantity' => $item['qty'] ?? 1,
+                    'price' => $item['price'] ?? 0,
+                    'subtotal' => $itemSubtotal,
                 ]);
 
                 // Kurangi stok jika produk ditemukan
@@ -74,12 +92,18 @@ class KasirController extends Controller
                 }
             }
 
+            $order->update([
+                'total_amount' => $order->items()->sum('subtotal'),
+            ]);
+
             DB::commit();
 
             return response()->json([
                 'success'        => true,
                 'message'        => 'Transaksi berhasil disimpan!',
-                'transaction_id' => $transaction->id
+                'transaction_id' => $transaction->id,
+                'order_id'      => $order->id,
+                'invoice_url'   => route('orders.invoice.preview', ['order' => $order->id]),
             ]);
 
         } catch (\Exception $e) {

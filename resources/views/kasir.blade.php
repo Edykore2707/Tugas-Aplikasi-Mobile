@@ -197,6 +197,17 @@
                     <button id="btnPay" class="btn btn-success btn-lg w-100 fw-bold py-3" onclick="processPayment()">
                         BAYAR & CETAK
                     </button>
+
+                    <div id="invoiceActions" class="d-none mt-3">
+                        <div class="d-grid gap-2">
+                            <a id="invoicePreviewLink" class="btn btn-outline-primary w-100" target="_blank" rel="noopener noreferrer">
+                                Lihat Invoice
+                            </a>
+                            <button id="printInvoiceButton" class="btn btn-outline-dark w-100" type="button" onclick="printLastInvoice()">
+                                Print Invoice
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -289,6 +300,7 @@
     let products = JSON.parse(document.getElementById("products-data")?.textContent || "[]");
     let cart = [];
     let heldTransactions = [];
+    let lastInvoiceUrl = "";
 
     const searchInput = document.getElementById("searchInput");
 
@@ -559,26 +571,49 @@
         // FETCH POST KE LARAVEL
         fetch("{{ route('kasir.store') }}", {
             method: "POST",
+            credentials: "same-origin",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "X-CSRF-TOKEN": token
+                "X-CSRF-TOKEN": token,
+                "X-Requested-With": "XMLHttpRequest"
             },
             body: JSON.stringify(payload)
         })
         .then(async (response) => {
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || "Terjadi kesalahan server");
+            const contentType = response.headers.get("content-type") || "";
+            const data = contentType.includes("application/json") ? await response.json() : null;
+
+            if (response.status === 401 || response.status === 419) {
+                window.location.href = "{{ route('login') }}";
+                return null;
             }
+
+            if (!response.ok) {
+                throw new Error((data && data.message) || "Terjadi kesalahan server");
+            }
+
             return data;
         })
         .then((data) => {
+            if (!data) return;
+
             if (data.success) {
                 alert(data.message || "Transaksi berhasil disimpan!");
                 
                 // 1. ISI STRUK TERLEBIH DAHULU LALU TAMPILKAN POP-UP CETAK
                 printReceipt(payment, total);
+
+                if (data.invoice_url) {
+                    const previewLink = document.getElementById('invoicePreviewLink');
+                    const invoiceActions = document.getElementById('invoiceActions');
+                    lastInvoiceUrl = data.invoice_url;
+
+                    if (previewLink) previewLink.href = data.invoice_url;
+                    if (invoiceActions) invoiceActions.classList.remove('d-none');
+
+                    window.open(data.invoice_url, '_blank', 'noopener,noreferrer');
+                }
 
                 // 2. BERSIHKAN KERANJANG
                 cancelTransaction(false);
@@ -635,6 +670,21 @@
         printArea.style.display = "block";
         window.print();
         printArea.style.display = "none";
+    }
+
+    function printLastInvoice() {
+        if (!lastInvoiceUrl) {
+            alert('Belum ada invoice yang diproses.');
+            return;
+        }
+
+        const printWindow = window.open(lastInvoiceUrl, '_blank', 'noopener,noreferrer');
+        if (printWindow) {
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
     }
 
     /* --------------------------------------------------

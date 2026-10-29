@@ -10,7 +10,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\PostController;
-use App\Http\Controllers\StrukController; // <-- Ditambahkan
+use App\Http\Controllers\StrukController;
+use App\Http\Controllers\OrderController; // <-- Ditambahkan
 
 /*
 |--------------------------------------------------------------------------
@@ -131,7 +132,6 @@ Route::middleware(['auth'])->group(function () {
 | Area Terproteksi Middleware Role (RBAC Toko Bola)
 |--------------------------------------------------------------------------
 */
-
 // Akses yang harus login
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -146,6 +146,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Rute Cetak Struk
         Route::get('/struk', [StrukController::class, 'struk'])->name('struk.cetak');
+
+        // Rute Preview Invoice di Browser
+        Route::get('/orders/{order}/invoice/preview', [OrderController::class, 'preview'])->name('orders.invoice.preview');
+
+        // Rute Cetak Invoice PDF
+        Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     });
 
     // Produk hanya admin
