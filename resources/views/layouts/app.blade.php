@@ -32,5 +32,31 @@
                 {{ $slot }}
             </main>
         </div>
+
+        @auth
+        <!-- Real-time Event Listener (Laravel Reverb & Echo) -->
+        <script>
+            window.addEventListener('load', function () {
+                const userId = "{{ auth()->id() }}";
+
+                // Fungsi untuk memasang listener setelah Echo dipastikan siap
+                function initEchoListener() {
+                    if (window.Echo) {
+                        window.Echo.private(`user.${userId}`)
+                            .listen('.order.placed', (e) => {
+                                alert(`🔔 Pesanan Baru Masuk!\nID Pesanan: #${e.order_id}\nTotal: Rp ${Number(e.total).toLocaleString('id-ID')}\nPemesan: ${e.user_name}`);
+                                console.log('Real-Time Order Event Received:', e);
+                            });
+                        console.log('✅ Real-time listener terhubung ke channel: user.' + userId);
+                    } else {
+                        // Cek kembali setiap 100ms jika Echo belum selesai dimuat
+                        setTimeout(initEchoListener, 100);
+                    }
+                }
+
+                initEchoListener();
+            });
+        </script>
+        @endauth
     </body>
 </html>

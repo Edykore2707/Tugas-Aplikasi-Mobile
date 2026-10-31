@@ -2,12 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderPlaced;
 use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    /**
+     * Simpan pesanan baru dan kirim notifikasi real-time via Reverb.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'total_amount' => 'required|numeric',
+        ]);
+
+        $user = auth()->user();
+
+        // 1. Simpan data transaksi
+        $order = Order::create([
+            'user_id'      => $user->id,
+            'total_amount' => $request->total_amount,
+        ]);
+
+        // 2. Pancarkan event real-time
+        event(new OrderPlaced($order, $user));
+
+        return redirect()->back()->with('success', 'Pesanan berhasil dibuat!');
+    }
+
     /**
      * Tampilkan pratinjau invoice di browser.
      */

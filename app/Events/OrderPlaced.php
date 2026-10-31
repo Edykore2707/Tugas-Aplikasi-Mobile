@@ -2,22 +2,24 @@
 
 namespace App\Events;
 
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderPlaced implements ShouldBroadcast
+class OrderPlaced implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $order;
-    public $user;
+    public Order $order;
+    public User $user;
 
-    public function __construct($order, $user)
+    public function __construct(Order $order, User $user)
     {
         $this->order = $order;
         $this->user = $user;
@@ -26,7 +28,7 @@ class OrderPlaced implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('user.' . $this->user->id),
+            new PrivateChannel('admin.orders'),
         ];
     }
 

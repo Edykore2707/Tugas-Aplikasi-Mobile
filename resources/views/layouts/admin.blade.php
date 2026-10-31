@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @vite(['resources/js/app.js'])
     <style>
         :root {
             --bg: #0f172a;
@@ -125,6 +126,74 @@
             </div>
         </div>
     </div>
+
+    @auth
+        @if (auth()->user()->role === 'admin')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (!window.Echo) {
+                        return;
+                    }
+
+                    function showOrderToast(event) {
+                        const payload = event || {};
+                        const orderId = payload.order_id ?? 'Unknown';
+                        const total = payload.total ?? 0;
+                        const buyer = payload.user_name ?? 'Kasir';
+                        const toast = document.createElement('div');
+                        const totalLabel = Number(total).toLocaleString('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            maximumFractionDigits: 0,
+                        });
+
+                        toast.className = 'position-fixed top-0 end-0 m-3 rounded-4 shadow-lg border';
+                        toast.style.zIndex = '9999';
+                        toast.style.width = '340px';
+                        toast.style.maxWidth = 'calc(100vw - 32px)';
+                        toast.style.background = 'linear-gradient(135deg, rgba(16,185,129,0.18), rgba(17,24,39,0.95))';
+                        toast.style.borderColor = 'rgba(16,185,129,0.4)';
+                        toast.style.color = '#f8fafc';
+                        toast.style.padding = '16px 18px';
+                        toast.innerHTML = `
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="rounded-3 p-2" style="background: rgba(16,185,129,0.18); color: #34d399; font-size: 1.2rem;">
+                                    <i class="bi bi-bell-fill"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold mb-1" style="font-size: 1rem;">🔔 Pesanan Baru Masuk!</div>
+                                    <div class="small text-light">ID Pesanan: #${orderId}</div>
+                                    <div class="small text-light">Total: ${totalLabel}</div>
+                                    <div class="small text-light">Pemesan: ${buyer}</div>
+                                </div>
+                            </div>
+                        `;
+
+                        document.body.appendChild(toast);
+                        alert(`🔔 Pesanan Baru Masuk!\nID Pesanan: #${orderId}\nTotal: ${totalLabel}\nPemesan: ${buyer}`);
+
+                        setTimeout(() => toast.remove(), 6000);
+                    }
+
+                    window.Echo.private('admin.orders')
+                        .listen('.order.placed', (event) => {
+                            showOrderToast(event);
+                        });
+
+                    const testButton = document.getElementById('test-order-alert');
+                    if (testButton) {
+                        testButton.addEventListener('click', function () {
+                            showOrderToast({
+                                order_id: 'TEST-' + Date.now(),
+                                total: 250000,
+                                user_name: 'Testing Admin'
+                            });
+                        });
+                    }
+                });
+            </script>
+        @endif
+    @endauth
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

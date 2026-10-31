@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderPlaced;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -97,6 +98,8 @@ class KasirController extends Controller
             ]);
 
             DB::commit();
+
+            event(new OrderPlaced($order, auth()->user()));
 
             return response()->json([
                 'success'        => true,

@@ -70,6 +70,9 @@
                         <a href="{{ route('products.create') }}" class="btn btn-outline-light btn-modern px-4 py-2">
                             <i class="bi bi-plus-lg me-1"></i> Tambah Produk Baru
                         </a>
+                        <button type="button" id="test-order-alert" class="btn btn-warning btn-modern px-4 py-2 text-dark">
+                            <i class="bi bi-bell-fill me-1"></i> Coba Notifikasi
+                        </button>
                     </div>
                 </div>
             </div>
