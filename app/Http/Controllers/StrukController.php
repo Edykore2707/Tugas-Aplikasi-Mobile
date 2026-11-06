@@ -2,22 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PrinterConnectionResolver;
 use Illuminate\Http\Request;
 use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
-// Jika menggunakan printer jaringan (LAN/Wi-Fi), gunakan use di bawah ini:
-// use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 
 class StrukController extends Controller
 {
     public function struk()
     {
         try {
-            // 1. Pilih konektor printer (sesuaikan dengan nama printer di Windows Anda)
-            $connector = new WindowsPrintConnector("POS-58");
-            
-            // Jika pakai Printer LAN / Wi-Fi:
-            // $connector = new NetworkPrintConnector("192.168.1.100", 9100);
+            $printerResolver = new PrinterConnectionResolver();
+            $connector = $printerResolver->resolveConnector();
 
             $printer = new Printer($connector);
 

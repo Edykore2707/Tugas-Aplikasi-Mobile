@@ -43,6 +43,24 @@ Route::middleware(['guest'])->group(function () {
             'password' => 'required',
         ]);
 
+        if (User::count() === 0) {
+            User::create([
+                'name' => 'Administrator',
+                'email' => 'admin@toko-bola.test',
+                'password' => Hash::make('password123'),
+                'role' => 'admin',
+                'email_verified_at' => now(),
+            ]);
+
+            User::create([
+                'name' => 'Kasir',
+                'email' => 'kasir@toko-bola.test',
+                'password' => Hash::make('password123'),
+                'role' => 'kasir',
+                'email_verified_at' => now(),
+            ]);
+        }
+
         if (Auth::attempt($credentials)) {
             $user = User::find(Auth::id());
 
@@ -118,7 +136,7 @@ Route::middleware(['auth'])->group(function () {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login');
+        return redirect('/');
     })->name('logout');
 
     // Rute Modul Authorization (Gate & Policy)

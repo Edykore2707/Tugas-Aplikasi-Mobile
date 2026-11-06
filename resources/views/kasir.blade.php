@@ -198,6 +198,10 @@
                         BAYAR & CETAK
                     </button>
 
+                    <button id="btnPrintReceipt" class="btn btn-outline-dark btn-lg w-100 fw-bold py-3 mt-2" type="button" onclick="printCurrentReceipt()">
+                        CETAK STRUK
+                    </button>
+
                     <div id="invoiceActions" class="d-none mt-3">
                         <div class="d-grid gap-2">
                             <a id="invoicePreviewLink" class="btn btn-outline-primary w-100" target="_blank" rel="noopener noreferrer">
@@ -247,39 +251,39 @@
 <!-- ==========================================
      TEMPLATE STRUK UNTUK CETAK THERMAL
 ========================================== -->
-<div id="receipt-print-area" style="display: none;">
+<div id="receipt-print-area" style="display: none; color: #000; font-weight: 700; font-size: 12px; line-height: 1.5;">
     <div style="text-align: center; margin-bottom: 8px;">
-        <h4 style="margin: 0; font-weight: bold; font-size: 14px;">TOKO RETAIL MAKMUR</h4>
-        <div style="font-size: 10px;">Jl. Contoh No. 123 • Jember</div>
-        <div style="font-size: 10px;">Telp. 0812-xxxx-xxxx</div>
-        <div>--------------------------------</div>
+        <h4 style="margin: 0; font-weight: 900; font-size: 15px; color: #000;">TOKO BOLA</h4>
+        <div style="font-size: 11px; font-weight: 700;">Jln. Trans Seba</div>
+        <div style="font-size: 11px; font-weight: 700;">Telp. 082141526307</div>
+        <div style="font-weight: 700;">--------------------------------</div>
     </div>
 
     <div style="margin-bottom: 8px;">
-        <div>Tgl : <span id="printDate"></span></div>
-        <div>Kasir : Admin</div>
-        <div>--------------------------------</div>
+        <div style="font-weight: 700;">Tgl : <span id="printDate"></span></div>
+        <div style="font-weight: 700;">Kasir : Admin</div>
+        <div style="font-weight: 700;">--------------------------------</div>
     </div>
 
-    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+    <table style="width: 100%; font-size: 11px; font-weight: 700; border-collapse: collapse; color: #000;">
         <tbody id="printCartItems"></tbody>
     </table>
-    <div>--------------------------------</div>
+    <div style="font-weight: 700;">--------------------------------</div>
 
-    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 4px;">
+    <div style="display: flex; justify-content: space-between; font-weight: 900; margin-top: 4px; color: #000;">
         <span>TOTAL:</span>
         <span id="printGrandTotal">Rp 0</span>
     </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+    <div style="display: flex; justify-content: space-between; font-weight: 700; margin-top: 4px; color: #000;">
         <span>Bayar:</span>
         <span id="printPaid">Rp 0</span>
     </div>
-    <div style="display: flex; justify-content: space-between;">
+    <div style="display: flex; justify-content: space-between; font-weight: 700; color: #000;">
         <span>Kembali:</span>
         <span id="printChange">Rp 0</span>
     </div>
 
-    <div style="text-align: center; margin-top: 12px; font-size: 10px;">
+    <div style="text-align: center; margin-top: 12px; font-size: 11px; font-weight: 700; color: #000;">
         ================================<br>
         Terima Kasih Atas Kunjungan Anda!<br>
         Barang yang sudah dibeli<br>tidak dapat ditukar/dikembalikan.
@@ -636,6 +640,17 @@
     /* --------------------------------------------------
        FUNGSI KHUSUS MENGISI DATA & CETAK STRUK THERMAL
     -------------------------------------------------- */
+    function printCurrentReceipt() {
+        if (!cart.length) {
+            alert('Keranjang masih kosong.');
+            return;
+        }
+
+        const total = getGrandTotal();
+        const payment = parseFloat(document.getElementById("payment")?.value) || total;
+        printReceipt(payment, total);
+    }
+
     function printReceipt(payment, total) {
         const printArea = document.getElementById("receipt-print-area");
         if (!printArea) return;

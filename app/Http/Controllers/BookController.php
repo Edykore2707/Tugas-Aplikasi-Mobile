@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Services\PrinterConnectionResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
 class BookController extends Controller
 {
@@ -96,8 +96,8 @@ class BookController extends Controller
         }
 
         try {
-            // Sesuaikan nama "POS-58" dengan nama printer thermal yang terpasang/shared
-            $connector = new WindowsPrintConnector("POS-58");
+            $printerResolver = new PrinterConnectionResolver();
+            $connector = $printerResolver->resolveConnector();
             $printer = new Printer($connector);
 
             $printer->setJustification(Printer::JUSTIFY_CENTER);

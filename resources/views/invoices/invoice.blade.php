@@ -104,7 +104,10 @@
         }
         .actions {
             margin-top: 28px;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         .btn {
             display: inline-block;
@@ -114,10 +117,19 @@
             padding: 11px 22px;
             border-radius: 8px;
             font-weight: bold;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+        }
+        .btn.print {
+            background: #0f766e;
+        }
+        .btn.download {
+            background: #2563eb;
         }
         @media print {
             body { background: white; padding: 0; }
-            .btn { display: none; }
+            .actions { display: none; }
             .invoice-box { box-shadow: none; border: none; }
         }
     </style>
@@ -183,7 +195,8 @@
         </div>
 
         <div class="actions">
-            <a class="btn" href="{{ route('orders.invoice', ['order' => $invoice->id]) }}">Download PDF</a>
+            <button type="button" class="btn print" onclick="window.print()">Cetak Struk</button>
+            <a class="btn download" href="{{ route('orders.invoice', ['order' => $invoice->id]) }}">Download PDF</a>
         </div>
     </div>
 </body>
