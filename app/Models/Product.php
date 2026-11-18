@@ -12,6 +12,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'category',
+        'category_id',
         'description',
         'price',
         'stock',
@@ -23,4 +24,14 @@ class Product extends Model
         'price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function categoryRelation()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
 }

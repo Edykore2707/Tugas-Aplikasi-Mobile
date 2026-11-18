@@ -153,9 +153,6 @@ Route::middleware(['auth'])->group(function () {
 // Akses yang harus login
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/admin', function () {
-        return view('admin.index');
-    })->name('admin.index');
 
     // Akses gabungan (Admin & Kasir)
     Route::middleware(['role:admin,kasir'])->group(function () {
